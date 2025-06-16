@@ -1,55 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
   <title>จองห้องประชุม</title>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 <body>
-  <h2>จองห้องประชุม 1</h2>
+  <h2>ฟอร์มจองห้องประชุม</h2>
   <form id="bookingForm">
-    ชื่อ: <input type="text" id="name"><br><br>
-    หัวข้อประชุม: <input type="text" id="objective"><br><br>
-    วันที่: <input type="date" id="date"><br><br>
-    เวลาเริ่ม: <input type="time" id="startTime"><br><br>
-    เวลาสิ้นสุด: <input type="time" id="endTime"><br><br>
-    <button type="submit">ส่งคำจอง</button>
+    ชื่อผู้จอง: <input type="text" id="name" required><br>
+    หัวข้อประชุม: <input type="text" id="topic" required><br>
+    ห้องประชุม: <input type="text" id="room" value="ห้องประชุม 1" readonly><br>
+    วันที่เริ่ม: <input type="datetime-local" id="start" required><br>
+    วันที่สิ้นสุด: <input type="datetime-local" id="end" required><br>
+    <button type="submit">จอง</button>
   </form>
 
+  <div id="result"></div>
+
   <script>
-    const webhookUrl = "https://script.google.com/a/macros/p-cal.com/s/AKfycbxOzdPYtGG3qoSixgIGIkRBYxsOJV3z9ck6MDuho_0_t05rTEKdiPIQsRqLalptazU/exec"; // ใส่ URL Web App ของคุณ
-
-    async function sendBooking(data) {
-      const response = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data)
-      });
-      const result = await response.text();
-      alert(result);
-      liff.closeWindow();
-    }
-
-    document.getElementById("bookingForm").addEventListener("submit", function (e) {
+    const form = document.getElementById("bookingForm");
+    form.addEventListener("submit", e => {
       e.preventDefault();
-
       const data = {
         name: document.getElementById("name").value,
-        objective: document.getElementById("objective").value,
-        date: document.getElementById("date").value,
-        startTime: document.getElementById("startTime").value,
-        endTime: document.getElementById("endTime").value
+        topic: document.getElementById("topic").value,
+        room: document.getElementById("room").value,
+        start: document.getElementById("start").value,
+        end: document.getElementById("end").value
       };
-
-      sendBooking(data);
-    });
-
-    // เริ่ม LIFF
-    liff.init({ liffId: "YOUR_LIFF_ID" }).then(() => {
-      liff.getProfile().then(profile => {
-        document.getElementById("name").value = profile.displayName;
+      
+      fetch("https://script.google.com/a/macros/p-cal.com/s/AKfycbzNAoN3spMXiVNQfKw7tRags8gNafMr2ptm4vQ-A28sGITsqxgaanru4R0B0ZPFUbE1/exec", {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .then(res => res.json())
+      .then(resp => {
+        if(resp.result === "success"){
+          document.getElementById("result").innerText = "จองห้องประชุมเรียบร้อยแล้ว";
+          form.reset();
+        } else {
+          document.getElementById("result").innerText = "เกิดข้อผิดพลาด โปรดลองใหม่";
+        }
+      })
+      .catch(err => {
+        document.getElementById("result").innerText = "เกิดข้อผิดพลาด โปรดลองใหม่";
+        console.error(err);
       });
     });
   </script>
